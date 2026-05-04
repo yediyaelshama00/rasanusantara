@@ -1,0 +1,94 @@
+Folder PATH listing for volume D
+Volume serial number is BC2A-75DC
+D:.
+¦   main.dart
+¦   struktur.txt
+¦   
++---app
+¦       app.dart
+¦       routes.dart
+¦       
++---core
+¦   +---constants
+¦   ¦       api_keys.dart
+¦   ¦       app_colors.dart
+¦   ¦       app_strings.dart
+¦   ¦       
+¦   +---theme
+¦   ¦       app_theme.dart
+¦   ¦       
+¦   +---utils
+¦   ¦       currency_converter.dart
+¦   ¦       region_mapper.dart
+¦   ¦       time_converter.dart
+¦   ¦       
+¦   +---widgets
+¦           empty_state.dart
+¦           primary_button.dart
+¦           recipe_card.dart
+¦           section_title.dart
+¦           
++---data
+¦   +---local
+¦   ¦       database_helper.dart
+¦   ¦       session_helper.dart
+¦   ¦       
+¦   +---models
+¦   ¦       cooking_schedule_model.dart
+¦   ¦       culinary_place_model.dart
+¦   ¦       food_game_model.dart
+¦   ¦       recipe_model.dart
+¦   ¦       user_model.dart
+¦   ¦       
+¦   +---repositories
+¦   ¦       auth_repository.dart
+¦   ¦       recipe_repository.dart
+¦   ¦       
+¦   +---services
+¦           ai_recipe_service.dart
+¦           biometric_service.dart
+¦           geoapify_places_service.dart
+¦           location_service.dart
+¦           notification_service.dart
+¦           recipe_api_service.dart
+¦           
++---features
+    +---ai
+    ¦       ai_recommendation_screen.dart
+    ¦       
+    +---auth
+    ¦       login_screen.dart
+    ¦       register_screen.dart
+    ¦       splash_screen.dart
+    ¦       
+    +---favorite
+    ¦       favorite_screen.dart
+    ¦       
+    +---game
+    ¦       peta_rasa_game_screen.dart
+    ¦       
+    +---home
+    ¦       home_screen.dart
+    ¦       
+    +---map
+    ¦       culinary_map_screen.dart
+    ¦       
+    +---navigation
+    ¦       main_navigation.dart
+    ¦       
+    +---profile
+    ¦       feedback_tpm_screen.dart
+    ¦       profile_screen.dart
+    ¦       
+    +---recipe
+    ¦   ¦   recipe_detail_screen.dart
+    ¦   ¦   
+    ¦   +---book
+    ¦           recipe_book_screen.dart
+    ¦           
+    +---search
+    ¦       search_screen.dart
+    ¦       
+    +---sensor
+            shake_random_recipe_screen.dart
+            
