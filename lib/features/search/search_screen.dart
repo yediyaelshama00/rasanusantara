@@ -50,39 +50,127 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  void showInfo() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return Container(
+          margin: const EdgeInsets.all(14),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: AppColors.spiceBrown,
+              width: 2,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.line,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.spiceBrown,
+                  size: 34,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Tentang Peta Kuliner',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.ink,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Fitur ini menggunakan OpenStreetMap dan Geoapify Places API untuk mencari tempat makan berdasarkan lokasi dan nuansa kuliner daerah.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w500,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.ivory,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           children: [
-            const Text(
-              'Peta Kuliner',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                color: AppColors.ink,
-                letterSpacing: -0.6,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Cari restoran atau warung dengan nuansa kuliner daerah pilihanmu.',
-              style: TextStyle(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w600,
-                height: 1.35,
-              ),
-            ),
+            buildTopHeader(),
             const SizedBox(height: 20),
             buildMapCard(),
-            const SizedBox(height: 22),
-            buildInfoCard(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget buildTopHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Peta Kuliner',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkBrown,
+                  letterSpacing: -0.6,
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Cari restoran atau warung dengan nuansa kuliner daerah pilihanmu.',
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        _InfoButton(
+          onTap: showInfo,
+        ),
+      ],
     );
   }
 
@@ -90,21 +178,17 @@ class _SearchScreenState extends State<SearchScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            AppColors.darkBrown,
-            AppColors.spiceBrown,
-            AppColors.terracotta,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppColors.spiceBrown,
+          width: 2.2,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.darkBrown.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: Color(0x22000000),
+            blurRadius: 14,
+            offset: Offset(0, 7),
           ),
         ],
       ),
@@ -115,16 +199,16 @@ class _SearchScreenState extends State<SearchScreen> {
             children: [
               Icon(
                 Icons.travel_explore_rounded,
-                color: Colors.white,
-                size: 30,
+                color: AppColors.spiceBrown,
+                size: 28,
               ),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Cari Restoran di Peta',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                    color: AppColors.ink,
+                    fontWeight: FontWeight.w700,
                     fontSize: 19,
                   ),
                 ),
@@ -132,15 +216,15 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Pilih nuansa kuliner dan lokasi pencarian. Aplikasi akan menampilkan restoran yang cocok di peta.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.78),
-              fontWeight: FontWeight.w600,
+              color: AppColors.muted,
+              fontWeight: FontWeight.w500,
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           buildDropdown(
             label: 'Nuansa kuliner',
             value: selectedStyle,
@@ -152,7 +236,7 @@ class _SearchScreenState extends State<SearchScreen> {
               });
             },
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           buildDropdown(
             label: 'Lokasi pencarian',
             value: selectedCity,
@@ -164,24 +248,29 @@ class _SearchScreenState extends State<SearchScreen> {
               });
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
             height: 50,
-            child: FilledButton.icon(
+            child: ElevatedButton.icon(
               onPressed: openCulinaryMap,
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.spiceBrown,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.greenEnd,
+                foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
+                  side: const BorderSide(
+                    color: AppColors.greenShadow,
+                    width: 1.4,
+                  ),
                 ),
               ),
               icon: const Icon(Icons.map_rounded),
               label: const Text(
                 'Lihat Restoran di Peta',
                 style: TextStyle(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
@@ -201,10 +290,10 @@ class _SearchScreenState extends State<SearchScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
+          color: AppColors.spiceBrown.withOpacity(0.24),
         ),
       ),
       child: Column(
@@ -212,9 +301,9 @@ class _SearchScreenState extends State<SearchScreen> {
         children: [
           Text(
             label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.74),
-              fontWeight: FontWeight.w700,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontWeight: FontWeight.w600,
               fontSize: 12,
             ),
           ),
@@ -222,14 +311,14 @@ class _SearchScreenState extends State<SearchScreen> {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              dropdownColor: AppColors.ivory,
+              dropdownColor: AppColors.paper,
               icon: const Icon(
                 Icons.keyboard_arrow_down_rounded,
-                color: Colors.white,
+                color: AppColors.spiceBrown,
               ),
               style: const TextStyle(
                 color: AppColors.ink,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
               selectedItemBuilder: (context) {
                 return items.map((item) {
@@ -237,7 +326,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Icon(
                         icon,
-                        color: Colors.white,
+                        color: AppColors.spiceBrown,
                         size: 19,
                       ),
                       const SizedBox(width: 8),
@@ -246,8 +335,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           item,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
+                            color: AppColors.ink,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -268,34 +357,38 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
+}
 
-  Widget buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: AppColors.spiceBrown,
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Fitur ini menggunakan OpenStreetMap dan Geoapify Places API untuk mencari tempat makan berdasarkan lokasi dan nuansa kuliner daerah.',
-              style: TextStyle(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-              ),
+class _InfoButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _InfoButton({
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.paper,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.line,
             ),
           ),
-        ],
+          child: const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.spiceBrown,
+            size: 22,
+          ),
+        ),
       ),
     );
   }

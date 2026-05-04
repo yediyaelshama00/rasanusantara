@@ -4,7 +4,7 @@ class AppUser {
   final String email;
   final String passwordHash;
   final String salt;
-  final String photoPath;
+  final String? photoPath;
   final bool biometricEnabled;
 
   const AppUser({
@@ -13,7 +13,7 @@ class AppUser {
     required this.email,
     required this.passwordHash,
     required this.salt,
-    required this.photoPath,
+    this.photoPath,
     required this.biometricEnabled,
   });
 
@@ -24,7 +24,7 @@ class AppUser {
       email: map['email'] as String,
       passwordHash: map['password_hash'] as String,
       salt: map['salt'] as String,
-      photoPath: map['photo_path'] as String? ?? '',
+      photoPath: map['photo_path'] as String?,
       biometricEnabled: (map['biometric_enabled'] as int? ?? 0) == 1,
     );
   }

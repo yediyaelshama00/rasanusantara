@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../app/routes.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -19,10 +20,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await Future<void>.delayed(const Duration(seconds: 2));
+
     final hasSession = await SessionHelper.instance.hasSession();
+
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, hasSession ? AppRoutes.main : AppRoutes.login);
+
+    Navigator.pushReplacementNamed(
+      context,
+      hasSession ? AppRoutes.main : AppRoutes.login,
+    );
   }
 
   @override
@@ -31,38 +38,92 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.spiceBrown, AppColors.terracotta, AppColors.turmeric],
+            colors: [
+              AppColors.spiceBrown,
+              AppColors.terracotta,
+              AppColors.turmeric,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Stack(
           children: [
-            Positioned(top: -70, right: -40, child: _Circle(size: 180, opacity: 0.12)),
-            Positioned(bottom: -80, left: -60, child: _Circle(size: 220, opacity: 0.10)),
+            const Positioned(
+              top: -70,
+              right: -40,
+              child: _Circle(size: 180, opacity: 0.12),
+            ),
+            const Positioned(
+              bottom: -80,
+              left: -60,
+              child: _Circle(size: 220, opacity: 0.10),
+            ),
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 112,
-                    height: 112,
+                    width: 148,
+                    height: 148,
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(38),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.32),
+                        width: 1.4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.darkBrown.withValues(alpha: 0.18),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
-                    child: const Center(child: Text('🍛', style: TextStyle(fontSize: 56))),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) {
+                        return const Center(
+                          child: Text(
+                            '🍛',
+                            style: TextStyle(fontSize: 56),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const Text(
                     AppStrings.appName,
-                    style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -1),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -1,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     AppStrings.tagline,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.88)),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.88),
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: Colors.white.withValues(alpha: 0.92),
+                    ),
                   ),
                 ],
               ),
@@ -78,7 +139,10 @@ class _Circle extends StatelessWidget {
   final double size;
   final double opacity;
 
-  const _Circle({required this.size, required this.opacity});
+  const _Circle({
+    required this.size,
+    required this.opacity,
+  });
 
   @override
   Widget build(BuildContext context) {
