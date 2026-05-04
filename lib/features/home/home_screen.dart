@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../app/routes.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/recipe_card.dart';
@@ -7,6 +6,7 @@ import '../../core/widgets/section_title.dart';
 import '../../data/models/recipe_model.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/recipe_repository.dart';
+import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   final void Function(int index)? onChangeTab;
@@ -24,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final recipeRepository = RecipeRepository();
   final authRepository = AuthRepository();
 
-  List<Recipe> popular = [];
+  late Recipe? recommendation;
+  List<Recipe> others = [];
   String name = 'Teman Rasa';
   bool loading = true;
 
@@ -36,13 +37,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadHome() async {
     final user = await authRepository.getCurrentUser();
-    final popularData = await recipeRepository.getPopularRecipes();
+    final allRecipes = await recipeRepository.getRecipes();
 
     if (!mounted) return;
 
+    if (allRecipes.isEmpty) {
+      setState(() {
+        name = user?.name ?? 'Teman Rasa';
+        recommendation = null;
+        others = [];
+        loading = false;
+      });
+      return;
+    }
+
+    final now = DateTime.now();
+    final seed = now.year * 1000 + now.month * 100 + now.day;
+
+    final shuffled = List<Recipe>.from(allRecipes)..shuffle(Random(seed));
+
     setState(() {
       name = user?.name ?? 'Teman Rasa';
-      popular = popularData;
+
+      recommendation = shuffled.first;
+      others = shuffled.skip(1).take(5).toList();
+
       loading = false;
     });
   }
@@ -57,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topRecipe = popular.isNotEmpty ? popular.first : null;
+    final topRecipe = recommendation;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -76,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     buildHeader(),
                     const SizedBox(height: 20),
-                    if (topRecipe != null) _HeroRecommendation(recipe: topRecipe),
+                    if (topRecipe != null)
+                      _HeroRecommendation(recipe: topRecipe),
                     const SizedBox(height: 22),
                     Row(
                       children: [
@@ -150,9 +170,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     const SizedBox(height: 26),
-                    const SectionTitle(title: 'Populer di Nusantara'),
+                    const SectionTitle(title: 'Jelajah Resep Nusantara'),
                     const SizedBox(height: 12),
-                    ...popular.map(
+                    ...others.map(
                       (recipe) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: RecipeCard(
