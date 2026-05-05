@@ -21,20 +21,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
   late final AiRecipeService aiService;
 
   // Bahan yang tersedia sebagai quick chip
-  final List<String> availableChips = [
-    'ayam',
-    'daging sapi',
-    'ikan',
-    'udang',
-    'tempe',
-    'tahu',
-    'santan',
-    'kunyit',
-    'cabai',
-    'bawang merah',
-    'serai',
-    'jahe',
-  ];
+  final List<String> availableChips = [];
 
   // Bahan yang sudah dipilih user (tag)
   final List<String> selectedIngredients = [];
@@ -69,12 +56,26 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
   Future<void> _loadRecipes() async {
     final data = await recipeRepository.getRecipes();
     if (!mounted) return;
+
+    // Ekstrak bahan unik dari semua resep di DB
+    final ingredientSet = <String>{};
+    for (final recipe in data) {
+      final lines = recipe.ingredients.split('\n');
+      for (final line in lines) {
+        final clean = line.trim();
+        if (clean.isNotEmpty) ingredientSet.add(clean);
+      }
+    }
+
     setState(() {
       recipes = data;
+      // Ganti hardcoded chips dengan hasil ekstrak dari DB
+      availableChips
+        ..clear()
+        ..addAll(ingredientSet.toList()..sort());
       loadingRecipes = false;
     });
 
-    // Inject daftar resep ke AI setelah DB dimuat
     final recipeNames = data.map((r) => r.name).join(', ');
     aiService.setAvailableRecipes(recipeNames);
   }
