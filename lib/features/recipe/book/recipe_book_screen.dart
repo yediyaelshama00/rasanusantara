@@ -264,8 +264,9 @@ class _RecipeBookScreenState extends State<RecipeBookScreen> {
 
   Widget buildIslandFilter() {
     return SizedBox(
-      height: 42,
+      height: 50,
       child: ListView.separated(
+        clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
         itemCount: islands.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -289,8 +290,9 @@ class _RecipeBookScreenState extends State<RecipeBookScreen> {
 
   Widget buildProvinceFilter() {
     return SizedBox(
-      height: 42,
+      height: 50,
       child: ListView.separated(
+        clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
         itemCount: currentProvinces.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),

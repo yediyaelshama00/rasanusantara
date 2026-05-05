@@ -140,8 +140,10 @@ class _ShakeRandomRecipeScreenState extends State<ShakeRandomRecipeScreen> {
                   SizedBox(
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: _randomPick,
-                      icon: const Icon(Icons.casino_outlined),
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.recipeBook);
+                      },
+                      icon: const Icon(Icons.menu_book_rounded),
                       label: const Text(
                         'Pilih Manual',
                         style: TextStyle(

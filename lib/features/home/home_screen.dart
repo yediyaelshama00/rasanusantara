@@ -148,15 +148,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 22),
 
                     Row(
                       children: [
                         Expanded(
                           child: _GameMenuPanel(
-                            label: 'Peta Rasa',
+                            label: 'Pac-Man Nusantara',
                             icon: Icons.sports_esports_rounded,
-                            description: 'Main tebak asal makanan',
+                            description: 'Kumpulkan makanan khas Nusantara dalam labirin',
                             onTap: () {
                               Navigator.pushNamed(
                                 context,
@@ -180,23 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    _WideGamePanel(
-                      label: 'Explore',
-                      title: 'Jelajahi Semua Resep',
-                      subtitle:
-                          'Temukan masakan Nusantara favoritmu dari berbagai daerah.',
-                      icon: Icons.restaurant_menu_rounded,
-                      buttonText: 'Buka Resep',
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.recipeBook,
-                        );
-                      },
                     ),
 
                     const SizedBox(height: 26),
