@@ -8,6 +8,7 @@ import '../../app/routes.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/recipe_model.dart';
 import '../../data/repositories/recipe_repository.dart';
+import '../../core/widgets/recipe_image.dart';
 
 class ShakeRandomRecipeScreen extends StatefulWidget {
   const ShakeRandomRecipeScreen({super.key});
@@ -352,19 +353,16 @@ class _SelectedRecipeCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 96,
-            height: 96,
+            width: 96, height: 96,
             decoration: BoxDecoration(
-              color: AppColors.cream,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.spiceBrown.withOpacity(0.35),
-              ),
+              border: Border.all(color: AppColors.spiceBrown.withOpacity(0.35)),
             ),
-            child: Center(
-              child: Text(
-                recipe.emoji,
-                style: const TextStyle(fontSize: 52),
+            child: ClipOval(
+              child: RecipeImage(
+                imagePath: recipe.imagePath,
+                width: 96, height: 96,
+                fit: BoxFit.cover,
               ),
             ),
           ),

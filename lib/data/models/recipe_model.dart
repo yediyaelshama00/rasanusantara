@@ -9,7 +9,7 @@ class Recipe {
   final int cookTimeMinutes;
   final String difficulty;
   final int estimatedCost;
-  final String emoji;
+  final String imagePath;
 
   const Recipe({
     this.id,
@@ -22,7 +22,7 @@ class Recipe {
     required this.cookTimeMinutes,
     required this.difficulty,
     required this.estimatedCost,
-    required this.emoji,
+    required this.imagePath,
   });
 
   factory Recipe.fromMap(Map<String, Object?> map) {
@@ -37,7 +37,7 @@ class Recipe {
       cookTimeMinutes: map['cook_time_minutes'] as int,
       difficulty: map['difficulty'] as String,
       estimatedCost: map['estimated_cost'] as int,
-      emoji: map['emoji'] as String,
+      imagePath: map['image_path'] as String,
     );
   }
 
@@ -53,7 +53,7 @@ class Recipe {
       'cook_time_minutes': cookTimeMinutes,
       'difficulty': difficulty,
       'estimated_cost': estimatedCost,
-      'emoji': emoji,
+      'image_path': imagePath,
     };
   }
 }

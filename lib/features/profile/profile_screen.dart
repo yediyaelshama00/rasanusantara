@@ -33,34 +33,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _errorMessage(Object error) {
     final text = error.toString();
-
-    if (text.startsWith('Exception: ')) {
+    if (text.startsWith('Exception: '))
       return text.replaceFirst('Exception: ', '');
-    }
-
-    if (text.contains('PlatformException')) {
+    if (text.contains('PlatformException'))
       return 'Aksi gagal diproses oleh perangkat';
-    }
-
-    if (text.contains('PathNotFoundException')) {
+    if (text.contains('PathNotFoundException'))
       return 'File gambar tidak ditemukan';
-    }
-
-    if (text.contains('FileSystemException')) {
+    if (text.contains('FileSystemException'))
       return 'Gagal menyimpan file gambar';
-    }
-
     return 'Terjadi kesalahan. Coba lagi';
   }
 
   void _showSnack(String message) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   bool _isValidEmail(String email) {
@@ -71,20 +58,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _load() async {
     try {
       final data = await repository.getCurrentUser();
-
       if (!mounted) return;
-
       setState(() {
         user = data;
         loading = false;
       });
     } catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        loading = false;
-      });
-
+      setState(() => loading = false);
       _showSnack('Gagal memuat profil: ${_errorMessage(e)}');
     }
   }
@@ -92,77 +73,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<String> _saveImageToAppFolder(XFile image) async {
     try {
       final originalFile = File(image.path);
-
-      if (!await originalFile.exists()) {
+      if (!await originalFile.exists())
         throw Exception('File gambar tidak ditemukan');
-      }
-
       final directory = await getApplicationDocumentsDirectory();
-
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
-      }
-
+      if (!await directory.exists()) await directory.create(recursive: true);
       final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final savedImage = await originalFile.copy('${directory.path}/$fileName');
-
-      if (!await savedImage.exists()) {
+      if (!await savedImage.exists())
         throw Exception('Gagal menyimpan gambar profil');
-      }
-
       return savedImage.path;
     } catch (e) {
       throw Exception(_errorMessage(e));
     }
   }
 
-  Widget _buildProfileImage({
-    double size = 78,
-    bool light = true,
-  }) {
+  Widget _buildProfileImage({double size = 78, bool light = true}) {
     final photoPath = user?.photoPath;
     final hasPhoto = photoPath != null &&
         photoPath.isNotEmpty &&
         File(photoPath).existsSync();
-
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         color: light ? AppColors.paper : AppColors.cream,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.spiceBrown,
-          width: 2.4,
-        ),
+        border: Border.all(color: AppColors.spiceBrown, width: 2.4),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x26000000),
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
+              color: Color(0x26000000), blurRadius: 10, offset: Offset(0, 5))
         ],
       ),
       child: ClipOval(
         child: hasPhoto
-            ? Image.file(
-                File(photoPath),
+            ? Image.file(File(photoPath),
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) {
-                  return Icon(
-                    Icons.person_rounded,
-                    color: AppColors.spiceBrown,
-                    size: size * 0.48,
-                  );
-                },
-              )
-            : Icon(
-                Icons.person_rounded,
-                color: AppColors.spiceBrown,
-                size: size * 0.48,
-              ),
+                errorBuilder: (_, __, ___) => Icon(Icons.person_rounded,
+                    color: AppColors.spiceBrown, size: size * 0.48))
+            : Icon(Icons.person_rounded,
+                color: AppColors.spiceBrown, size: size * 0.48),
       ),
     );
   }
@@ -174,29 +125,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: AppColors.terracotta.withOpacity(0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.terracotta.withOpacity(0.35),
-        ),
+        border: Border.all(color: AppColors.terracotta.withOpacity(0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: AppColors.terracotta,
-            size: 20,
-          ),
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.terracotta, size: 20),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: AppColors.terracotta,
-                fontWeight: FontWeight.w800,
-                height: 1.35,
-              ),
-            ),
-          ),
+              child: Text(message,
+                  style: const TextStyle(
+                      color: AppColors.terracotta,
+                      fontWeight: FontWeight.w800,
+                      height: 1.35))),
         ],
       ),
     );
@@ -210,185 +152,181 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final nameController = TextEditingController(text: user?.name ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
+    final currentPwCtrl = TextEditingController();
+    final newPwCtrl = TextEditingController();
+    final confirmPwCtrl = TextEditingController();
 
     String? selectedPhotoPath = user?.photoPath;
     String? formError;
-
     bool saving = false;
     bool verifiedByBiometric = false;
-    bool obscureOldPassword = true;
-    bool obscureNewPassword = true;
-    bool obscureConfirmPassword = true;
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
 
-    final updated = await showModalBottomSheet<bool>(
+    // We resolve the result here instead of passing it via pop() to avoid
+    // using the sheet's BuildContext after the element is unmounted.
+    bool didUpdate = false;
+
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return WillPopScope(
-          onWillPop: () async => !saving,
+      builder: (sheetCtx) {
+        return PopScope(
+          canPop: false, // block hardware back while saving
           child: StatefulBuilder(
-            builder: (context, setSheetState) {
+            builder: (context, setSheet) {
+              bool isSheetActive() => sheetCtx.mounted;
+
               final hasPhoto = selectedPhotoPath != null &&
                   selectedPhotoPath!.isNotEmpty &&
                   File(selectedPhotoPath!).existsSync();
 
-              void showFormError(String message) {
-                setSheetState(() {
-                  formError = message;
+              void showErr(String msg) {
+                if (!sheetCtx.mounted) return;
+
+                setSheet(() {
+                  formError = msg;
                   saving = false;
                 });
               }
 
-              void clearFormError() {
-                setSheetState(() {
-                  formError = null;
-                });
+              void clearErr() {
+                if (!sheetCtx.mounted) return;
+
+                setSheet(() => formError = null);
               }
 
-              Future<void> verifyWithBiometric() async {
+              // ── biometric ─────────────────────────────────────────────
+              Future<void> verifyBio() async {
                 if (saving) return;
-
-                clearFormError();
-
+                clearErr();
                 try {
                   if (!(user?.biometricEnabled ?? false)) {
-                    showFormError('Biometrik belum diaktifkan untuk akun ini.');
+                    showErr('Biometrik belum diaktifkan untuk akun ini.');
+                    return;
+                  }
+                  if (!await BiometricService().isAvailable()) {
+                    showErr(
+                        'Biometrik belum tersedia. Pastikan fingerprint/face unlock sudah aktif di HP.');
+                    return;
+                  }
+                  if (!await BiometricService().authenticate()) {
+                    showErr('Verifikasi biometrik gagal atau dibatalkan.');
                     return;
                   }
 
-                  final available = await BiometricService().isAvailable();
+                  if (!sheetCtx.mounted) return;
 
-                  if (!available) {
-                    showFormError(
-                      'Biometrik belum tersedia. Pastikan fingerprint/face unlock sudah aktif di HP.',
-                    );
-                    return;
-                  }
-
-                  final ok = await BiometricService().authenticate();
-
-                  if (!ok) {
-                    showFormError('Verifikasi biometrik gagal atau dibatalkan.');
-                    return;
-                  }
-
-                  setSheetState(() {
+                  setSheet(() {
                     verifiedByBiometric = true;
-                    currentPasswordController.clear();
+                    currentPwCtrl.clear();
                     formError = null;
                   });
                 } catch (e) {
-                  showFormError('Biometrik gagal diproses: ${_errorMessage(e)}');
+                  showErr('Biometrik gagal: ${_errorMessage(e)}');
                 }
               }
 
-              Future<void> pickProfileImage() async {
+              // ── pick photo ────────────────────────────────────────────
+              Future<void> pickPhoto() async {
                 if (saving) return;
-
-                clearFormError();
-
+                clearErr();
                 try {
-                  final image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    imageQuality: 75,
-                    maxWidth: 800,
-                  );
-
-                  if (image == null) {
-                    showFormError('Pemilihan gambar dibatalkan.');
+                  final img = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      imageQuality: 75,
+                      maxWidth: 800);
+                  if (img == null) {
+                    showErr('Pemilihan gambar dibatalkan.');
                     return;
                   }
+                  final path = await _saveImageToAppFolder(img);
 
-                  final savedPath = await _saveImageToAppFolder(image);
+                  if (!sheetCtx.mounted) return;
 
-                  setSheetState(() {
-                    selectedPhotoPath = savedPath;
+                  setSheet(() {
+                    selectedPhotoPath = path;
                     formError = null;
                   });
                 } catch (e) {
-                  showFormError(_errorMessage(e));
+                  showErr(_errorMessage(e));
                 }
               }
 
-              Future<void> saveAccount() async {
+              // ── save ──────────────────────────────────────────────────
+              Future<void> save() async {
                 if (saving) return;
-
-                clearFormError();
+                clearErr();
 
                 final name = nameController.text.trim();
                 final email = emailController.text.trim().toLowerCase();
-                final currentPassword = currentPasswordController.text;
-                final newPassword = newPasswordController.text.trim();
-                final confirmPassword = confirmPasswordController.text.trim();
+                // Do NOT trim passwords – they may intentionally contain spaces.
+                final currentPw = currentPwCtrl.text;
+                final newPw = newPwCtrl.text;
+                final confirmPw = confirmPwCtrl.text;
 
+                // Validasi nama
                 if (name.isEmpty) {
-                  showFormError('Nama tidak boleh kosong.');
+                  showErr('Nama tidak boleh kosong.');
                   return;
                 }
-
                 if (name.length < 3) {
-                  showFormError('Nama minimal 3 karakter.');
+                  showErr('Nama minimal 3 karakter.');
                   return;
                 }
-
                 if (name.length > 40) {
-                  showFormError('Nama maksimal 40 karakter.');
+                  showErr('Nama maksimal 40 karakter.');
                   return;
                 }
 
+                // Validasi email
                 if (email.isEmpty) {
-                  showFormError('Email tidak boleh kosong.');
+                  showErr('Email tidak boleh kosong.');
                   return;
                 }
-
                 if (!_isValidEmail(email)) {
-                  showFormError('Format email tidak valid.');
+                  showErr('Format email tidak valid.');
                   return;
                 }
 
-                if (!verifiedByBiometric && currentPassword.trim().isEmpty) {
-                  showFormError(
-                    'Masukkan password lama atau verifikasi pakai biometrik.',
-                  );
+                // Validasi keamanan – wajib salah satu
+                if (!verifiedByBiometric && currentPw.isEmpty) {
+                  showErr(
+                      'Masukkan password lama atau verifikasi pakai biometrik.');
                   return;
                 }
 
-                if (newPassword.isEmpty && confirmPassword.isNotEmpty) {
-                  showFormError('Isi password baru terlebih dahulu.');
+                // Validasi password baru (opsional, hanya jika diisi)
+                if (newPw.isNotEmpty) {
+                  if (newPw.length < 6) {
+                    showErr('Password baru minimal 6 karakter.');
+                    return;
+                  }
+                  if (!verifiedByBiometric && newPw == currentPw) {
+                    showErr(
+                        'Password baru tidak boleh sama dengan password lama.');
+                    return;
+                  }
+                  if (confirmPw.isEmpty) {
+                    showErr('Konfirmasi password baru wajib diisi.');
+                    return;
+                  }
+                  if (newPw != confirmPw) {
+                    showErr('Konfirmasi password baru tidak sama.');
+                    return;
+                  }
+                } else if (confirmPw.isNotEmpty) {
+                  showErr('Isi password baru terlebih dahulu.');
                   return;
                 }
 
-                if (newPassword.isNotEmpty && newPassword.length < 6) {
-                  showFormError('Password baru minimal 6 karakter.');
-                  return;
-                }
+                if (!isSheetActive()) return;
 
-                if (newPassword.isNotEmpty &&
-                    !verifiedByBiometric &&
-                    newPassword == currentPassword) {
-                  showFormError(
-                    'Password baru tidak boleh sama dengan password lama.',
-                  );
-                  return;
-                }
-
-                if (newPassword.isNotEmpty && confirmPassword.isEmpty) {
-                  showFormError('Konfirmasi password baru wajib diisi.');
-                  return;
-                }
-
-                if (newPassword.isNotEmpty && newPassword != confirmPassword) {
-                  showFormError('Konfirmasi password baru tidak sama.');
-                  return;
-                }
-
-                setSheetState(() {
+                setSheet(() {
                   saving = true;
                   formError = null;
                 });
@@ -398,69 +336,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     name: name,
                     email: email,
                     photoPath: selectedPhotoPath,
-                    currentPassword: currentPassword,
+                    currentPassword: currentPw,
                     verifiedByBiometric: verifiedByBiometric,
-                    newPassword: newPassword.isEmpty ? null : newPassword,
+                    newPassword: newPw.isEmpty ? null : newPw,
                   );
-
-                  if (!mounted) return;
-
-                  Navigator.of(sheetContext).pop(true);
+                  // Sukses – catat hasil lalu tutup via navigator yang sudah
+                  // di-capture sebelum async gap pertama.
+                  didUpdate = true;
+                  Navigator.of(sheetCtx).pop();
                 } catch (e) {
-                  if (!mounted) return;
-
-                  showFormError(_errorMessage(e));
+                  // Gagal – tampilkan error, sheet tetap terbuka.
+                  showErr(_errorMessage(e));
                 }
               }
 
+              // ── UI ────────────────────────────────────────────────────
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
                 child: Container(
                   constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.92,
-                  ),
+                      maxHeight: MediaQuery.of(context).size.height * 0.92),
                   margin: const EdgeInsets.all(12),
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
                   decoration: BoxDecoration(
                     color: AppColors.paper,
                     borderRadius: BorderRadius.circular(34),
-                    border: Border.all(
-                      color: AppColors.spiceBrown,
-                      width: 2.8,
-                    ),
+                    border: Border.all(color: AppColors.spiceBrown, width: 2.8),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x30000000),
-                        blurRadius: 18,
-                        offset: Offset(0, 10),
-                      ),
+                          color: Color(0x30000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 10))
                     ],
                   ),
                   child: SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Header row
                         Row(
                           children: [
                             const Expanded(
-                              child: _RibbonTitle(text: 'Edit Akun'),
-                            ),
+                                child: _RibbonTitle(text: 'Edit Akun')),
                             const SizedBox(width: 10),
                             _SmallRoundButton(
                               icon: Icons.close_rounded,
                               onTap: saving
                                   ? null
                                   : () {
-                                      Navigator.of(sheetContext).pop(false);
+                                      didUpdate = false;
+                                      if (sheetCtx.mounted) {
+                                        Navigator.of(sheetCtx).pop();
+                                      }
                                     },
                             ),
                           ],
                         ),
                         const SizedBox(height: 18),
+
+                        // Avatar
                         GestureDetector(
-                          onTap: saving ? null : pickProfileImage,
+                          onTap: saving ? null : pickPhoto,
                           child: Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -471,41 +408,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: AppColors.cream,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: AppColors.spiceBrown,
-                                    width: 2.6,
-                                  ),
+                                      color: AppColors.spiceBrown, width: 2.6),
                                   boxShadow: const [
                                     BoxShadow(
-                                      color: Color(0x26000000),
-                                      blurRadius: 12,
-                                      offset: Offset(0, 6),
-                                    ),
+                                        color: Color(0x26000000),
+                                        blurRadius: 12,
+                                        offset: Offset(0, 6))
                                   ],
                                 ),
                                 child: ClipOval(
                                   child: hasPhoto
-                                      ? Image.file(
-                                          File(selectedPhotoPath!),
+                                      ? Image.file(File(selectedPhotoPath!),
                                           width: 108,
                                           height: 108,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) {
-                                            return const Center(
-                                              child: Icon(
-                                                Icons.person_rounded,
-                                                size: 46,
-                                                color: AppColors.spiceBrown,
-                                              ),
-                                            );
-                                          },
-                                        )
+                                          errorBuilder: (_, __, ___) =>
+                                              const Center(
+                                                  child: Icon(
+                                                      Icons.person_rounded,
+                                                      size: 46,
+                                                      color: AppColors
+                                                          .spiceBrown)))
                                       : const Center(
-                                          child: Icon(
-                                            Icons.person_rounded,
-                                            size: 46,
-                                            color: AppColors.spiceBrown,
-                                          ),
-                                        ),
+                                          child: Icon(Icons.person_rounded,
+                                              size: 46,
+                                              color: AppColors.spiceBrown)),
                                 ),
                               ),
                               Container(
@@ -513,47 +440,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: AppColors.greenEnd,
                                   shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
                                   boxShadow: const [
                                     BoxShadow(
-                                      color: Color(0x26000000),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 4),
-                                    ),
+                                        color: Color(0x26000000),
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4))
                                   ],
                                 ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
+                                child: const Icon(Icons.camera_alt_rounded,
+                                    size: 18, color: Colors.white),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 20),
+
+                        // Name
                         _GameTextField(
-                          controller: nameController,
-                          label: 'Username / Nama',
-                          hint: 'Masukkan username baru',
-                          icon: Icons.person_outline_rounded,
-                          enabled: !saving,
-                          textInputAction: TextInputAction.next,
-                        ),
+                            controller: nameController,
+                            label: 'Username / Nama',
+                            hint: 'Masukkan username baru',
+                            icon: Icons.person_outline_rounded,
+                            enabled: !saving,
+                            textInputAction: TextInputAction.next),
                         const SizedBox(height: 12),
+
+                        // Email
                         _GameTextField(
-                          controller: emailController,
-                          label: 'Email',
-                          hint: 'Masukkan email baru',
-                          icon: Icons.email_outlined,
-                          enabled: !saving,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                        ),
+                            controller: emailController,
+                            label: 'Email',
+                            hint: 'Masukkan email baru',
+                            icon: Icons.email_outlined,
+                            enabled: !saving,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next),
                         const SizedBox(height: 16),
+
+                        // Security section
                         _EditSection(
                           title: 'Verifikasi Keamanan',
                           child: Column(
@@ -564,38 +489,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? 'Sudah diverifikasi dengan biometrik.'
                                     : 'Masukkan password lama. Jika login biometrik aktif, kamu juga bisa verifikasi pakai biometrik.',
                                 style: const TextStyle(
-                                  color: AppColors.softChocolate,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.45,
-                                ),
+                                    color: AppColors.softChocolate,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.45),
                               ),
-                              const SizedBox(height: 12),
-                              if (!verifiedByBiometric)
+                              if (!verifiedByBiometric) ...[
+                                const SizedBox(height: 12),
                                 _GameTextField(
-                                  controller: currentPasswordController,
+                                  controller: currentPwCtrl,
                                   label: 'Password Lama',
                                   hint: 'Wajib untuk menyimpan perubahan',
                                   icon: Icons.lock_outline_rounded,
                                   enabled: !saving,
-                                  obscureText: obscureOldPassword,
+                                  obscureText: obscureOld,
                                   textInputAction: TextInputAction.next,
                                   suffixIcon: IconButton(
                                     onPressed: saving
                                         ? null
-                                        : () {
-                                            setSheetState(() {
-                                              obscureOldPassword =
-                                                  !obscureOldPassword;
-                                            });
-                                          },
+                                        : () => setSheet(
+                                            () => obscureOld = !obscureOld),
                                     icon: Icon(
-                                      obscureOldPassword
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                      color: AppColors.spiceBrown,
-                                    ),
+                                        obscureOld
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        color: AppColors.spiceBrown),
                                   ),
                                 ),
+                              ],
                               if (user?.biometricEnabled ?? false) ...[
                                 const SizedBox(height: 12),
                                 SizedBox(
@@ -604,29 +524,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: OutlinedButton.icon(
                                     onPressed: verifiedByBiometric || saving
                                         ? null
-                                        : verifyWithBiometric,
-                                    icon: Icon(
-                                      verifiedByBiometric
-                                          ? Icons.verified_rounded
-                                          : Icons.fingerprint_rounded,
-                                    ),
+                                        : verifyBio,
+                                    icon: Icon(verifiedByBiometric
+                                        ? Icons.verified_rounded
+                                        : Icons.fingerprint_rounded),
                                     label: Text(
                                       verifiedByBiometric
                                           ? 'Biometrik Terverifikasi'
                                           : 'Verifikasi Pakai Biometrik',
                                       style: const TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                      ),
+                                          fontWeight: FontWeight.w900),
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: AppColors.spiceBrown,
                                       side: const BorderSide(
-                                        color: AppColors.spiceBrown,
-                                        width: 1.5,
-                                      ),
+                                          color: AppColors.spiceBrown,
+                                          width: 1.5),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(18),
-                                      ),
+                                          borderRadius:
+                                              BorderRadius.circular(18)),
                                     ),
                                   ),
                                 ),
@@ -635,61 +551,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+
+                        // New password
                         _GameTextField(
-                          controller: newPasswordController,
+                          controller: newPwCtrl,
                           label: 'Password Baru',
                           hint: 'Kosongkan jika tidak ingin mengganti',
                           icon: Icons.lock_reset_rounded,
                           enabled: !saving,
-                          obscureText: obscureNewPassword,
+                          obscureText: obscureNew,
                           textInputAction: TextInputAction.next,
                           suffixIcon: IconButton(
                             onPressed: saving
                                 ? null
-                                : () {
-                                    setSheetState(() {
-                                      obscureNewPassword = !obscureNewPassword;
-                                    });
-                                  },
+                                : () =>
+                                    setSheet(() => obscureNew = !obscureNew),
                             icon: Icon(
-                              obscureNewPassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.spiceBrown,
-                            ),
+                                obscureNew
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.spiceBrown),
                           ),
                         ),
                         const SizedBox(height: 12),
+
+                        // Confirm password
                         _GameTextField(
-                          controller: confirmPasswordController,
+                          controller: confirmPwCtrl,
                           label: 'Konfirmasi Password Baru',
                           hint: 'Ulangi password baru',
                           icon: Icons.lock_person_rounded,
                           enabled: !saving,
-                          obscureText: obscureConfirmPassword,
+                          obscureText: obscureConfirm,
                           textInputAction: TextInputAction.done,
                           suffixIcon: IconButton(
                             onPressed: saving
                                 ? null
-                                : () {
-                                    setSheetState(() {
-                                      obscureConfirmPassword =
-                                          !obscureConfirmPassword;
-                                    });
-                                  },
+                                : () => setSheet(
+                                    () => obscureConfirm = !obscureConfirm),
                             icon: Icon(
-                              obscureConfirmPassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.spiceBrown,
-                            ),
+                                obscureConfirm
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: AppColors.spiceBrown),
                           ),
                         ),
                         const SizedBox(height: 16),
+
                         if (formError != null) ...[
                           _buildFormError(formError!),
                           const SizedBox(height: 14),
                         ],
+
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -702,27 +615,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(
-                                  color: AppColors.greenShadow,
-                                  width: 1.5,
-                                ),
+                                    color: AppColors.greenShadow, width: 1.5),
                               ),
                             ),
-                            onPressed: saving ? null : saveAccount,
+                            onPressed: saving ? null : save,
                             child: saving
                                 ? const SizedBox(
                                     width: 22,
                                     height: 22,
                                     child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Simpan Perubahan',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
+                                        strokeWidth: 2.5, color: Colors.white))
+                                : const Text('Simpan Perubahan',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w900)),
                           ),
                         ),
                       ],
@@ -734,15 +639,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-    );
+    ).whenComplete(() async {
+      await Future.delayed(const Duration(milliseconds: 100));
+    });
 
     nameController.dispose();
     emailController.dispose();
-    currentPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
+    currentPwCtrl.dispose();
+    newPwCtrl.dispose();
+    confirmPwCtrl.dispose();
 
-    if (updated == true && mounted) {
+    if (didUpdate && mounted) {
       await _load();
       _showSnack('Akun berhasil diperbarui.');
     }
@@ -750,62 +657,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _toggleBiometric(bool value) async {
     if (biometricLoading) return;
-
-    setState(() {
-      biometricLoading = true;
-    });
-
+    setState(() => biometricLoading = true);
     try {
       if (value) {
-        final available = await BiometricService().isAvailable();
-
-        if (!available) {
+        if (!await BiometricService().isAvailable()) {
           _showSnack(
-            'Biometrik belum tersedia. Pastikan fingerprint/face unlock sudah aktif di HP.',
-          );
+              'Biometrik belum tersedia. Pastikan fingerprint/face unlock sudah aktif di HP.');
           return;
         }
-
-        final ok = await BiometricService().authenticate();
-
-        if (!ok) {
+        if (!await BiometricService().authenticate()) {
           _showSnack('Autentikasi biometrik dibatalkan atau gagal.');
           return;
         }
       }
-
       await repository.setBiometric(value);
       await _load();
-
       if (!mounted) return;
-
-      _showSnack(
-        value
-            ? 'Login biometrik berhasil diaktifkan.'
-            : 'Login biometrik berhasil dinonaktifkan.',
-      );
+      _showSnack(value
+          ? 'Login biometrik berhasil diaktifkan.'
+          : 'Login biometrik berhasil dinonaktifkan.');
     } catch (e) {
       _showSnack('Biometrik gagal diproses: ${_errorMessage(e)}');
     } finally {
-      if (mounted) {
-        setState(() {
-          biometricLoading = false;
-        });
-      }
+      if (mounted) setState(() => biometricLoading = false);
     }
   }
 
   Future<void> _logout() async {
     try {
       await repository.logout();
-
       if (!mounted) return;
-
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.login,
-        (_) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
     } catch (e) {
       _showSnack('Logout gagal: ${_errorMessage(e)}');
     }
@@ -818,10 +700,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SafeArea(
         child: loading
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.ivory,
-                ),
-              )
+                child: CircularProgressIndicator(color: AppColors.ivory))
             : ListView(
                 padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
                 children: [
@@ -831,46 +710,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Akun Saya',
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 36, 18, 18),
-                      child: Row(
-                        children: [
-                          _buildProfileImage(size: 76),
-                          const SizedBox(width: 16),
-                          Expanded(
+                      child: Row(children: [
+                        _buildProfileImage(size: 76),
+                        const SizedBox(width: 16),
+                        Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user?.name ?? 'Pengguna',
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(user?.name ?? 'Pengguna',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: AppColors.ink,
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  user?.email ?? '',
+                                      color: AppColors.ink,
+                                      fontSize: 21,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.4)),
+                              const SizedBox(height: 6),
+                              Text(user?.email ?? '',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          _SmallRoundButton(
-                            icon: Icons.edit_rounded,
-                            onTap: _showEditProfile,
-                          ),
-                        ],
-                      ),
+                                      color: AppColors.muted,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13)),
+                            ])),
+                        const SizedBox(width: 10),
+                        _SmallRoundButton(
+                            icon: Icons.edit_rounded, onTap: _showEditProfile),
+                      ]),
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -881,23 +748,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: SwitchListTile(
                         value: user?.biometricEnabled ?? false,
                         onChanged: biometricLoading ? null : _toggleBiometric,
-                        secondary: _IconBubble(
-                          icon: Icons.fingerprint_rounded,
-                        ),
-                        title: const Text(
-                          'Login Biometrik',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.ink,
-                          ),
-                        ),
+                        secondary: _IconBubble(icon: Icons.fingerprint_rounded),
+                        title: const Text('Login Biometrik',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.ink)),
                         subtitle: const Text(
-                          'Gunakan fingerprint atau face unlock',
-                          style: TextStyle(
-                            color: AppColors.muted,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                            'Gunakan fingerprint atau face unlock',
+                            style: TextStyle(
+                                color: AppColors.muted,
+                                fontWeight: FontWeight.w700)),
                         activeThumbColor: AppColors.greenEnd,
                       ),
                     ),
@@ -907,34 +767,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Menu',
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 30, 8, 8),
-                      child: Column(
-                        children: [
-                          _MenuTile(
+                      child: Column(children: [
+                        _MenuTile(
                             icon: Icons.rate_review_outlined,
                             title: 'Saran dan Kesan TPM',
                             subtitle: 'Mata kuliah terbaik',
                             onTap: () => Navigator.pushNamed(
-                              context,
-                              AppRoutes.feedback,
-                            ),
-                          ),
-                          const _GameDivider(),
-                          _MenuTile(
+                                context, AppRoutes.feedback)),
+                        const _GameDivider(),
+                        _MenuTile(
                             icon: Icons.info_outline_rounded,
                             title: 'Tentang Aplikasi',
                             subtitle: 'RasaNusantara 1.0.0',
-                            onTap: () => _showAbout(context),
-                          ),
-                          const _GameDivider(),
-                          _MenuTile(
+                            onTap: () => _showAbout(context)),
+                        const _GameDivider(),
+                        _MenuTile(
                             icon: Icons.logout_rounded,
                             title: 'Logout',
                             subtitle: 'Keluar dari sesi perangkat ini',
                             danger: true,
-                            onTap: _logout,
-                          ),
-                        ],
-                      ),
+                            onTap: _logout),
+                      ]),
                     ),
                   ),
                 ],
@@ -953,68 +806,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           color: AppColors.paper,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: AppColors.spiceBrown,
-            width: 2.6,
-          ),
+          border: Border.all(color: AppColors.spiceBrown, width: 2.6),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x26000000),
-              blurRadius: 18,
-              offset: Offset(0, 10),
-            ),
+                color: Color(0x26000000), blurRadius: 18, offset: Offset(0, 10))
           ],
         ),
         child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _RibbonTitle(text: 'RasaNusantara'),
-            SizedBox(height: 18),
-            Text(
-              'Aplikasi mobile resep tradisional Indonesia dengan SQLite, session, biometric login, LBS, sensor, AI rekomendasi, mini game, konversi mata uang, konversi waktu, dan notifikasi.',
-              style: TextStyle(
-                color: AppColors.softChocolate,
-                height: 1.55,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _RibbonTitle(text: 'RasaNusantara'),
+              SizedBox(height: 18),
+              Text(
+                  'Aplikasi mobile resep tradisional Indonesia dengan SQLite, session, biometric login, LBS, sensor, AI rekomendasi, mini game, konversi mata uang, konversi waktu, dan notifikasi.',
+                  style: TextStyle(
+                      color: AppColors.softChocolate,
+                      height: 1.55,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15)),
+            ]),
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Private widgets
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _TopTitle extends StatelessWidget {
   const _TopTitle();
-
   @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Profil',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: AppColors.darkBrown,
-          fontSize: 34,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -0.8,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const Center(
+        child: Text('Profil',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: AppColors.darkBrown,
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.8)),
+      );
 }
 
 class _GamePanel extends StatelessWidget {
   final String label;
   final Widget child;
-
-  const _GamePanel({
-    required this.label,
-    required this.child,
-  });
+  const _GamePanel({required this.label, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -1022,236 +860,140 @@ class _GamePanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.spiceBrown,
-          width: 2.8,
-        ),
+        border: Border.all(color: AppColors.spiceBrown, width: 2.8),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x26000000),
-            blurRadius: 14,
-            offset: Offset(0, 7),
-          ),
+              color: Color(0x26000000), blurRadius: 14, offset: Offset(0, 7))
         ],
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child,
-          Positioned(
-            top: -15,
-            left: 14,
-            right: 14,
-            child: _Ribbon(label: label),
-          ),
-        ],
-      ),
+      child: Stack(clipBehavior: Clip.none, children: [
+        child,
+        Positioned(top: -15, left: 14, right: 14, child: _Ribbon(label: label)),
+      ]),
     );
   }
 }
 
 class _Ribbon extends StatelessWidget {
   final String label;
-
-  const _Ribbon({
-    required this.label,
-  });
-
+  const _Ribbon({required this.label});
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 112),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 7,
-        ),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: AppColors.ribbonGradient,
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+  Widget build(BuildContext context) => Center(
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 112),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                colors: AppColors.ribbonGradient,
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.ribbonShadow, width: 1.2),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x24000000), blurRadius: 8, offset: Offset(0, 3))
+            ],
           ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppColors.ribbonShadow,
-            width: 1.2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x24000000),
-              blurRadius: 8,
-              offset: Offset(0, 3),
-            ),
-          ],
+          child: Text(label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900)),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }
 
 class _RibbonTitle extends StatelessWidget {
   final String text;
-
-  const _RibbonTitle({
-    required this.text,
-  });
-
+  const _RibbonTitle({required this.text});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 130),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 9,
-      ),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: AppColors.ribbonGradient,
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minWidth: 130),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+              colors: AppColors.ribbonGradient,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.ribbonShadow, width: 1.2),
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.ribbonShadow,
-          width: 1.2,
-        ),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
-          fontSize: 18,
-          letterSpacing: -0.2,
-        ),
-      ),
-    );
-  }
+        child: Text(text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                letterSpacing: -0.2)),
+      );
 }
 
 class _SmallRoundButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
-
-  const _SmallRoundButton({
-    required this.icon,
-    required this.onTap,
-  });
-
+  const _SmallRoundButton({required this.icon, required this.onTap});
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: onTap == null ? 0.45 : 1,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: AppColors.greenEnd,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white,
-              width: 2.4,
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap == null ? 0.45 : 1,
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: AppColors.greenEnd,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.4),
+              boxShadow: const [
+                BoxShadow(color: AppColors.greenShadow, offset: Offset(0, 3))
+              ],
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.greenShadow,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 23,
+            child: Icon(icon, color: Colors.white, size: 23),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _IconBubble extends StatelessWidget {
   final IconData icon;
-
-  const _IconBubble({
-    required this.icon,
-  });
-
+  const _IconBubble({required this.icon});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 46,
-      height: 46,
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.spiceBrown,
-          width: 2,
+  Widget build(BuildContext context) => Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: AppColors.cream,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.spiceBrown, width: 2),
         ),
-      ),
-      child: Icon(
-        icon,
-        color: AppColors.spiceBrown,
-        size: 24,
-      ),
-    );
-  }
+        child: Icon(icon, color: AppColors.spiceBrown, size: 24),
+      );
 }
 
 class _EditSection extends StatelessWidget {
   final String title;
   final Widget child;
-
-  const _EditSection({
-    required this.title,
-    required this.child,
-  });
-
+  const _EditSection({required this.title, required this.child});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.spiceBrown,
-          width: 1.6,
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        decoration: BoxDecoration(
+          color: AppColors.cream,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.spiceBrown, width: 1.6),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.ink,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title,
+              style: const TextStyle(
+                  color: AppColors.ink, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
           child,
-        ],
-      ),
-    );
-  }
+        ]),
+      );
 }
 
 class _GameTextField extends StatelessWidget {
@@ -1278,62 +1020,42 @@ class _GameTextField extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      enabled: enabled,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.white,
-        prefixIcon: Icon(
-          icon,
-          color: AppColors.spiceBrown,
+  Widget build(BuildContext context) => TextField(
+        controller: controller,
+        enabled: enabled,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.white,
+          prefixIcon: Icon(icon, color: AppColors.spiceBrown),
+          suffixIcon: suffixIcon,
+          labelStyle: const TextStyle(
+              color: AppColors.softChocolate, fontWeight: FontWeight.w700),
+          hintStyle: TextStyle(
+              color: AppColors.muted.withOpacity(0.65),
+              fontWeight: FontWeight.w600),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide:
+                  const BorderSide(color: AppColors.spiceBrown, width: 1.5)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(
+                  color: AppColors.spiceBrown.withOpacity(0.35), width: 1.4)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide:
+                  const BorderSide(color: AppColors.spiceBrown, width: 1.8)),
+          disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide(
+                  color: AppColors.spiceBrown.withOpacity(0.18), width: 1.2)),
         ),
-        suffixIcon: suffixIcon,
-        labelStyle: const TextStyle(
-          color: AppColors.softChocolate,
-          fontWeight: FontWeight.w700,
-        ),
-        hintStyle: TextStyle(
-          color: AppColors.muted.withOpacity(0.65),
-          fontWeight: FontWeight.w600,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(
-            color: AppColors.spiceBrown,
-            width: 1.5,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(
-            color: AppColors.spiceBrown.withOpacity(0.35),
-            width: 1.4,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(
-            color: AppColors.spiceBrown,
-            width: 1.8,
-          ),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(
-            color: AppColors.spiceBrown.withOpacity(0.18),
-            width: 1.2,
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }
 
 class _MenuTile extends StatelessWidget {
@@ -1342,71 +1064,44 @@ class _MenuTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
   final bool danger;
-
-  const _MenuTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.danger = false,
-  });
+  const _MenuTile(
+      {required this.icon,
+      required this.title,
+      required this.subtitle,
+      required this.onTap,
+      this.danger = false});
 
   @override
   Widget build(BuildContext context) {
     final color = danger ? AppColors.terracotta : AppColors.spiceBrown;
-
     return ListTile(
       onTap: onTap,
       leading: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: AppColors.cream,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: color,
-            width: 1.8,
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 24,
-        ),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w900,
-          color: AppColors.ink,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          color: AppColors.muted,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right_rounded,
-        color: color,
-      ),
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+              color: AppColors.cream,
+              shape: BoxShape.circle,
+              border: Border.all(color: color, width: 1.8)),
+          child: Icon(icon, color: color, size: 24)),
+      title: Text(title,
+          style: const TextStyle(
+              fontWeight: FontWeight.w900, color: AppColors.ink)),
+      subtitle: Text(subtitle,
+          style: const TextStyle(
+              color: AppColors.muted, fontWeight: FontWeight.w700)),
+      trailing: Icon(Icons.chevron_right_rounded, color: color),
     );
   }
 }
 
 class _GameDivider extends StatelessWidget {
   const _GameDivider();
-
   @override
-  Widget build(BuildContext context) {
-    return Divider(
+  Widget build(BuildContext context) => Divider(
       height: 1,
       thickness: 1.4,
       color: AppColors.spiceBrown.withOpacity(0.20),
       indent: 76,
-      endIndent: 12,
-    );
-  }
+      endIndent: 12);
 }

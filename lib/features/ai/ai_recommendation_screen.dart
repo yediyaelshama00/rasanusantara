@@ -57,25 +57,50 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
     final data = await recipeRepository.getRecipes();
     if (!mounted) return;
 
-    // Ekstrak bahan unik dari semua resep di DB
-    final ingredientSet = <String>{};
+    // Kata yang di-skip (opsional, ringan saja)
+    const skipKeywords = ['garam', 'gula', 'air', 'minyak', 'kaldu'];
+
+    // Hitung frekuensi bahan
+    final ingredientCount = <String, int>{};
+
     for (final recipe in data) {
       final lines = recipe.ingredients.split('\n');
+
       for (final line in lines) {
-        final clean = line.trim();
-        if (clean.isNotEmpty) ingredientSet.add(clean);
+        final clean = line.trim().toLowerCase();
+        if (clean.isEmpty) continue;
+
+        final cleanLower = clean.toLowerCase();
+
+        // Skip bahan tidak penting
+        final shouldSkip = skipKeywords.any((k) => cleanLower.startsWith(k));
+        if (shouldSkip) continue;
+
+        ingredientCount[clean] = (ingredientCount[clean] ?? 0) + 1;
       }
     }
 
+    // Ambil bahan yang sering muncul (>=2 kali)
+    final frequent = ingredientCount.entries
+        .where((e) => e.value >= 2)
+        .toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     setState(() {
       recipes = data;
-      // Ganti hardcoded chips dengan hasil ekstrak dari DB
+
       availableChips
         ..clear()
-        ..addAll(ingredientSet.toList()..sort());
+        ..addAll(
+          frequent.isEmpty
+              ? (ingredientCount.keys.toList()..sort()).take(15).toList()
+              : frequent.map((e) => e.key).take(20).toList(),
+        );
+
       loadingRecipes = false;
     });
 
+    // Kirim daftar resep ke AI
     final recipeNames = data.map((r) => r.name).join(', ');
     aiService.setAvailableRecipes(recipeNames);
   }
@@ -276,7 +301,12 @@ class _IngredientPanel extends StatefulWidget {
 }
 
 class _IngredientPanelState extends State<_IngredientPanel> {
-  bool expanded = true;
+  bool expanded = false;
+
+  String formatIngredient(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +349,18 @@ class _IngredientPanelState extends State<_IngredientPanel> {
               ),
             ),
           ),
+          if (!expanded && widget.selectedIngredients.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                'Bahan: ${widget.selectedIngredients.map(formatIngredient).join(", ")}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           if (expanded) ...[
             // Tag bahan yang dipilih
             if (widget.selectedIngredients.isNotEmpty)
@@ -329,66 +371,77 @@ class _IngredientPanelState extends State<_IngredientPanel> {
                   runSpacing: 6,
                   children: widget.selectedIngredients.map((ingredient) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.leaf.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: AppColors.leaf.withValues(alpha: 0.5)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            ingredient,
-                            style: const TextStyle(
-                              color: AppColors.leaf,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.leaf.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: AppColors.leaf.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formatIngredient(ingredient),
+                              style: const TextStyle(
+                                color: AppColors.leaf,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 5),
-                          GestureDetector(
-                            onTap: () => widget.onRemove(ingredient),
-                            child: const Icon(Icons.close_rounded,
-                                size: 14, color: AppColors.leaf),
-                          ),
-                        ],
-                      ),
-                    );
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () => widget.onRemove(ingredient),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.leaf.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: AppColors.leaf,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ));
                   }).toList(),
                 ),
               ),
             // Quick chips
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: widget.availableChips
-                    .where((c) => !widget.selectedIngredients.contains(c))
-                    .map((chip) => GestureDetector(
-                          onTap: () => widget.onToggle(chip),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppColors.line),
-                            ),
-                            child: Text(
-                              '+ $chip',
-                              style: const TextStyle(
-                                color: AppColors.spiceBrown,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: widget.availableChips
+                      .where((c) => !widget.selectedIngredients.contains(c))
+                      .map((chip) => GestureDetector(
+                            onTap: () => widget.onToggle(chip),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.line),
+                              ),
+                              child: Text(
+                                '+ $chip',
+                                style: const TextStyle(
+                                  color: AppColors.spiceBrown,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
-                          ),
-                        ))
-                    .toList(),
+                          ))
+                      .toList(),
+                ),
               ),
             ),
             // Tombol cari
@@ -605,7 +658,7 @@ class _MatchedRecipesSection extends StatelessWidget {
       children: [
         const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: AppColors.cream,
             borderRadius: BorderRadius.circular(12),

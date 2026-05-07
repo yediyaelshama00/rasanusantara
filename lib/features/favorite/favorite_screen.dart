@@ -10,6 +10,7 @@ import '../../data/models/cooking_schedule_model.dart';
 import '../../data/models/recipe_model.dart';
 import '../../data/repositories/recipe_repository.dart';
 import '../../data/services/notification_service.dart';
+import '../../core/widgets/recipe_image.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -446,12 +447,15 @@ class _ScheduleCard extends StatelessWidget {
                             width: 2.2,
                           ),
                         ),
-                        child: Center(
-                          child: Text(
-                            recipe?.emoji ?? '🍲',
-                            style: const TextStyle(fontSize: 31),
-                          ),
-                        ),
+                        child: recipe != null
+                          ? ClipOval(
+                              child: RecipeImage(
+                                imagePath: recipe.imagePath,
+                                width: 64, height: 64,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(Icons.restaurant_rounded, color: AppColors.muted, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(

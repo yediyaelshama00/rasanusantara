@@ -18,7 +18,11 @@ class RecipeRepository {
     return rows.map(Recipe.fromMap).toList();
   }
 
-  Future<List<Recipe>> searchRecipes({String keyword = '', String island = '', String ingredient = '', String difficulty = ''}) async {
+  Future<List<Recipe>> searchRecipes(
+      {String keyword = '',
+      String island = '',
+      String ingredient = '',
+      String difficulty = ''}) async {
     final db = await _db.database;
     final where = <String>[];
     final args = <Object>[];
@@ -57,13 +61,17 @@ class RecipeRepository {
 
   Future<List<Recipe>> getRecipesByIsland(String island) async {
     final db = await _db.database;
-    final rows = await db.query('recipes', where: 'island = ?', whereArgs: [island], orderBy: 'name ASC');
+    final rows = await db.query('recipes',
+        where: 'island = ?', whereArgs: [island], orderBy: 'name ASC');
     return rows.map(Recipe.fromMap).toList();
   }
 
   Future<bool> isFavorite(int userId, int recipeId) async {
     final db = await _db.database;
-    final rows = await db.query('favorites', where: 'user_id = ? AND recipe_id = ?', whereArgs: [userId, recipeId], limit: 1);
+    final rows = await db.query('favorites',
+        where: 'user_id = ? AND recipe_id = ?',
+        whereArgs: [userId, recipeId],
+        limit: 1);
     return rows.isNotEmpty;
   }
 
@@ -71,9 +79,12 @@ class RecipeRepository {
     final db = await _db.database;
     final exists = await isFavorite(userId, recipeId);
     if (exists) {
-      await db.delete('favorites', where: 'user_id = ? AND recipe_id = ?', whereArgs: [userId, recipeId]);
+      await db.delete('favorites',
+          where: 'user_id = ? AND recipe_id = ?',
+          whereArgs: [userId, recipeId]);
     } else {
-      await db.insert('favorites', {'user_id': userId, 'recipe_id': recipeId}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert('favorites', {'user_id': userId, 'recipe_id': recipeId},
+          conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -91,10 +102,12 @@ class RecipeRepository {
   Future<void> addSearchHistory(int userId, String keyword) async {
     if (keyword.trim().isEmpty) return;
     final db = await _db.database;
-    await db.insert('search_history', {'user_id': userId, 'keyword': keyword.trim()});
+    await db.insert(
+        'search_history', {'user_id': userId, 'keyword': keyword.trim()});
   }
 
-  Future<void> addSchedule(int userId, int recipeId, DateTime cookingTime, String note) async {
+  Future<void> addSchedule(
+      int userId, int recipeId, DateTime cookingTime, String note) async {
     final db = await _db.database;
     await db.insert('cooking_schedules', {
       'user_id': userId,
@@ -123,7 +136,7 @@ class RecipeRepository {
         r.cook_time_minutes,
         r.difficulty,
         r.estimated_cost,
-        r.emoji
+        r.image_path
       FROM cooking_schedules s
       INNER JOIN recipes r ON r.id = s.recipe_id
       WHERE s.user_id = ?
@@ -157,7 +170,10 @@ class RecipeRepository {
     );
   }
 
-  Future<void> saveFeedback({required int userId, required String impression, required String suggestion}) async {
+  Future<void> saveFeedback(
+      {required int userId,
+      required String impression,
+      required String suggestion}) async {
     final db = await _db.database;
     await db.insert('feedbacks', {
       'user_id': userId,
