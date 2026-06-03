@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../data/models/culinary_place_model.dart';
@@ -9,11 +11,9 @@ import '../../data/services/geoapify_places_service.dart';
 
 class CulinaryMapArgs {
   final String culinaryStyle;
-  final String cityName;
 
   const CulinaryMapArgs({
     required this.culinaryStyle,
-    required this.cityName,
   });
 }
 
@@ -28,20 +28,8 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
   final mapController = MapController();
   final placesService = GeoapifyPlacesService();
 
-  final Map<String, LatLng> cityCenters = const {
-    'Jakarta': LatLng(-6.200000, 106.816666),
-    'Medan': LatLng(3.595196, 98.672226),
-    'Padang': LatLng(-0.947083, 100.417181),
-    'Yogyakarta': LatLng(-7.795580, 110.369492),
-    'Surabaya': LatLng(-7.250445, 112.768845),
-    'Denpasar': LatLng(-8.670458, 115.212631),
-    'Makassar': LatLng(-5.147665, 119.432732),
-    'Palembang': LatLng(-2.976074, 104.775431),
-    'Jayapura': LatLng(-2.591602, 140.668999),
-  };
-
-  String culinaryStyle = 'Yogyakarta';
-  String cityName = 'Di Sekitarku';
+  String culinaryStyle = 'DI Yogyakarta';
+  String currentLocationName = 'Lokasi Saat Ini';
 
   bool isLoading = true;
   bool hasLoaded = false;
@@ -61,10 +49,48 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
 
     if (args is CulinaryMapArgs) {
       culinaryStyle = args.culinaryStyle;
-      cityName = args.cityName;
     }
 
     Future.microtask(searchPlaces);
+  }
+
+  Future<void> loadLocationName(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+
+      if (placemarks.isEmpty) return;
+
+      final place = placemarks.first;
+
+      if (!mounted) return;
+
+      setState(() {
+        currentLocationName =
+            '${place.subAdministrativeArea ?? place.locality ?? ''}, '
+            '${place.administrativeArea ?? ''}';
+      });
+    } catch (_) {}
+  }
+
+  Future<void> openGoogleMaps(CulinaryPlaceModel place) async {
+    final query = Uri.encodeComponent(
+      '${place.name} ${place.address}',
+    );
+
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   Future<void> searchPlaces() async {
@@ -75,12 +101,17 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
     });
 
     try {
-      if (cityName == 'Di Sekitarku') {
-        final position = await getCurrentPosition();
-        center = LatLng(position.latitude, position.longitude);
-      } else {
-        center = cityCenters[cityName] ?? const LatLng(-6.200000, 106.816666);
-      }
+      final position = await getCurrentPosition();
+
+      center = LatLng(
+        position.latitude,
+        position.longitude,
+      );
+
+      await loadLocationName(
+        position.latitude,
+        position.longitude,
+      );
 
       final result = await placesService.searchRestaurants(
         culinaryStyle: culinaryStyle,
@@ -101,12 +132,16 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
         }
       });
 
-      mapController.move(center, places.isEmpty ? 12 : 14);
+      mapController.move(
+        center,
+        places.isEmpty ? 12 : 14,
+      );
     } catch (_) {
       if (!mounted) return;
 
       setState(() {
-        errorMessage = 'Restoran belum ditemukan. Coba pilih lokasi lain.';
+        errorMessage =
+            'Restoran bernuansa $culinaryStyle belum ditemukan di sekitar lokasi Anda.';
       });
     } finally {
       if (!mounted) return;
@@ -261,6 +296,15 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
                       ? '${place.distance} meter dari pusat pencarian'
                       : 'Jarak belum tersedia',
                 ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => openGoogleMaps(place),
+                    icon: const Icon(Icons.navigation_rounded),
+                    label: const Text('Buka di Google Maps'),
+                  ),
+                ),
                 if (place.matchedKeyword != null) ...[
                   const SizedBox(height: 10),
                   _InfoBox(
@@ -395,7 +439,7 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          '$culinaryStyle • $cityName',
+                          '$culinaryStyle • $currentLocationName',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -423,7 +467,7 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
 
   Widget buildLoading() {
     return Container(
-      color: Colors.black.withOpacity(0.10),
+      color: Colors.black.withValues(alpha: 0.10),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(
@@ -874,7 +918,7 @@ class _InfoBox extends StatelessWidget {
         color: AppColors.cream,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.spiceBrown.withOpacity(0.25),
+          color: AppColors.spiceBrown.withValues(alpha: 0.25),
         ),
       ),
       child: Row(

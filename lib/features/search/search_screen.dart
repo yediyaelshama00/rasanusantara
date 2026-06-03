@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../app/routes.dart';
 import '../../core/constants/app_colors.dart';
@@ -13,31 +15,105 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final List<String> culinaryStyles = [
+    'Aceh',
     'Sumatera Utara',
     'Sumatera Barat',
-    'Yogyakarta',
+    'Riau',
+    'Kepulauan Riau',
+    'Jambi',
+    'Sumatera Selatan',
+    'Bengkulu',
+    'Lampung',
+    'Bangka Belitung',
+    'DKI Jakarta',
+    'Banten',
+    'Jawa Barat',
+    'Jawa Tengah',
+    'DI Yogyakarta',
     'Jawa Timur',
     'Bali',
+    'Nusa Tenggara Barat',
+    'Nusa Tenggara Timur',
+    'Kalimantan Barat',
+    'Kalimantan Tengah',
+    'Kalimantan Selatan',
+    'Kalimantan Timur',
+    'Kalimantan Utara',
+    'Sulawesi Utara',
+    'Gorontalo',
+    'Sulawesi Tengah',
+    'Sulawesi Barat',
     'Sulawesi Selatan',
+    'Sulawesi Tenggara',
+    'Maluku',
+    'Maluku Utara',
     'Papua',
-    'Palembang',
+    'Papua Barat',
+    'Papua Tengah',
+    'Papua Selatan',
+    'Papua Pegunungan',
+    'Papua Barat Daya',
   ];
 
-  final List<String> searchCities = [
-    'Di Sekitarku',
-    'Medan',
-    'Padang',
-    'Jakarta',
-    'Yogyakarta',
-    'Surabaya',
-    'Denpasar',
-    'Makassar',
-    'Palembang',
-    'Jayapura',
-  ];
+  String selectedStyle = 'DI Yogyakarta';
+  String currentLocation = 'Mengambil lokasi...';
 
-  String selectedStyle = 'Yogyakarta';
-  String selectedCity = 'Di Sekitarku';
+  @override
+  void initState() {
+    super.initState();
+    loadCurrentLocation();
+  }
+
+  Future<void> loadCurrentLocation() async {
+    try {
+      final serviceEnabled =
+          await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        setState(() {
+          currentLocation = 'Layanan lokasi tidak aktif';
+        });
+        return;
+      }
+
+      LocationPermission permission =
+          await Geolocator.checkPermission();
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        setState(() {
+          currentLocation = 'Izin lokasi ditolak';
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+
+        setState(() {
+          currentLocation =
+              '${place.subAdministrativeArea ?? place.locality ?? ''}, ${place.administrativeArea ?? ''}';
+        });
+      }
+    } catch (_) {
+      setState(() {
+        currentLocation = 'Lokasi tidak tersedia';
+      });
+    }
+  }
 
   void openCulinaryMap() {
     Navigator.pushNamed(
@@ -45,7 +121,6 @@ class _SearchScreenState extends State<SearchScreen> {
       AppRoutes.culinaryMap,
       arguments: CulinaryMapArgs(
         culinaryStyle: selectedStyle,
-        cityName: selectedCity,
       ),
     );
   }
@@ -104,7 +179,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Fitur ini menggunakan OpenStreetMap dan Geoapify Places API untuk mencari tempat makan berdasarkan lokasi dan nuansa kuliner daerah.',
+                  'Pilih provinsi asal kuliner dan aplikasi akan mencari restoran bernuansa daerah tersebut di sekitar lokasi Anda.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.muted,
@@ -156,7 +231,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               SizedBox(height: 6),
               Text(
-                'Cari restoran atau warung dengan nuansa kuliner daerah pilihanmu.',
+                'Cari restoran bernuansa kuliner Nusantara di sekitarmu.',
                 style: TextStyle(
                   color: AppColors.muted,
                   fontWeight: FontWeight.w500,
@@ -167,9 +242,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        _InfoButton(
-          onTap: showInfo,
-        ),
+        _InfoButton(onTap: showInfo),
       ],
     );
   }
@@ -217,7 +290,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Pilih nuansa kuliner dan lokasi pencarian. Aplikasi akan menampilkan restoran yang cocok di peta.',
+            'Pilih provinsi asal kuliner yang ingin kamu cari.',
             style: TextStyle(
               color: AppColors.muted,
               fontWeight: FontWeight.w500,
@@ -232,21 +305,39 @@ class _SearchScreenState extends State<SearchScreen> {
             icon: Icons.restaurant_menu_rounded,
             onChanged: (value) {
               setState(() {
-                selectedStyle = value ?? selectedStyle;
+                selectedStyle = value!;
               });
             },
           ),
           const SizedBox(height: 12),
-          buildDropdown(
-            label: 'Lokasi pencarian',
-            value: selectedCity,
-            items: searchCities,
-            icon: Icons.location_on_rounded,
-            onChanged: (value) {
-              setState(() {
-                selectedCity = value ?? selectedCity;
-              });
-            },
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cream,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.spiceBrown.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.my_location_rounded,
+                  color: AppColors.spiceBrown,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    currentLocation,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 18),
           SizedBox(
@@ -293,7 +384,7 @@ class _SearchScreenState extends State<SearchScreen> {
         color: AppColors.cream,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.spiceBrown.withOpacity(0.24),
+          color: AppColors.spiceBrown.withValues(alpha: 0.6),
         ),
       ),
       child: Column(
@@ -316,40 +407,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.spiceBrown,
               ),
-              style: const TextStyle(
-                color: AppColors.ink,
-                fontWeight: FontWeight.w500,
-              ),
-              selectedItemBuilder: (context) {
-                return items.map((item) {
-                  return Row(
-                    children: [
-                      Icon(
-                        icon,
-                        color: AppColors.spiceBrown,
-                        size: 19,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          item,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.ink,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList();
-              },
-              items: items.map((item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
+              items: items
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(e),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
