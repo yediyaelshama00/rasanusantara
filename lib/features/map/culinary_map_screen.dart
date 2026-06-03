@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
@@ -8,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/culinary_place_model.dart';
 import '../../data/services/geoapify_places_service.dart';
+import '../../data/repositories/auth_repository.dart';
 
 class CulinaryMapArgs {
   final String culinaryStyle;
@@ -27,15 +30,17 @@ class CulinaryMapScreen extends StatefulWidget {
 class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
   final mapController = MapController();
   final placesService = GeoapifyPlacesService();
-
+  final authRepository = AuthRepository();
   String culinaryStyle = 'DI Yogyakarta';
   String currentLocationName = 'Lokasi Saat Ini';
+  String? profileImagePath;
 
   bool isLoading = true;
   bool hasLoaded = false;
   String? errorMessage;
 
   LatLng center = const LatLng(-6.200000, 106.816666);
+  LatLng? userLocation;
   List<CulinaryPlaceModel> places = [];
 
   @override
@@ -51,7 +56,22 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
       culinaryStyle = args.culinaryStyle;
     }
 
-    Future.microtask(searchPlaces);
+    Future.microtask(() async {
+      await loadUserProfile();
+      await searchPlaces();
+    });
+  }
+
+  Future<void> loadUserProfile() async {
+  try {
+    final user = await authRepository.getCurrentUser();
+
+    if (!mounted) return;
+
+    setState(() {
+      profileImagePath = user?.photoPath;
+    });
+  } catch (_) {}
   }
 
   Future<void> loadLocationName(
@@ -107,6 +127,8 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
         position.latitude,
         position.longitude,
       );
+      
+      userLocation = center;
 
       await loadLocationName(
         position.latitude,
@@ -180,16 +202,17 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
   }
 
   List<Marker> get markers {
-    return places.map((place) {
-      return Marker(
-        point: LatLng(place.latitude, place.longitude),
-        width: 52,
-        height: 52,
-        child: GestureDetector(
-          onTap: () => showPlaceSheet(place),
+    final result = <Marker>[];
+
+    if (userLocation != null) {
+      result.add(
+        Marker(
+          point: userLocation!,
+          width: 60,
+          height: 60,
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.greenEnd,
+              color: Colors.blue,
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white,
@@ -201,21 +224,67 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
                   blurRadius: 12,
                   offset: Offset(0, 6),
                 ),
-                BoxShadow(
-                  color: AppColors.greenShadow,
-                  offset: Offset(0, 3),
-                ),
               ],
             ),
-            child: const Icon(
-              Icons.restaurant_rounded,
-              color: Colors.white,
-              size: 25,
+            child: ClipOval(
+              child: profileImagePath != null &&
+                      profileImagePath!.isNotEmpty &&
+                      File(profileImagePath!).existsSync()
+                  ? Image.file(
+                      File(profileImagePath!),
+                      fit: BoxFit.cover,
+                    )
+                  : const Icon(
+                      Icons.person_pin_circle,
+                      color: Colors.white,
+                      size: 34,
+                    ),
             ),
           ),
         ),
       );
-    }).toList();
+    }
+
+    result.addAll(
+      places.map((place) {
+        return Marker(
+          point: LatLng(place.latitude, place.longitude),
+          width: 52,
+          height: 52,
+          child: GestureDetector(
+            onTap: () => showPlaceSheet(place),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.greenEnd,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 3,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 6),
+                  ),
+                  BoxShadow(
+                    color: AppColors.greenShadow,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.restaurant_rounded,
+                color: Colors.white,
+                size: 25,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+
+    return result;
   }
 
   void showPlaceSheet(CulinaryPlaceModel place) {
@@ -307,11 +376,6 @@ class _CulinaryMapScreenState extends State<CulinaryMapScreen> {
                 ),
                 if (place.matchedKeyword != null) ...[
                   const SizedBox(height: 10),
-                  _InfoBox(
-                    icon: Icons.search_rounded,
-                    title: 'Kata Kunci',
-                    value: place.matchedKeyword!,
-                  ),
                 ],
               ],
             ),
