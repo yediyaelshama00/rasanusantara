@@ -42,7 +42,7 @@ class AiRecipeService {
     _history.add({'role': 'user', 'content': userMessage});
 
     final body = jsonEncode({
-      'model': 'openai/gpt-oss-20b:free', // model yang digunakan
+      'model': 'openai/gpt-oss-120b', // model yang digunakan
       'messages': [
         {'role': 'system', 'content': _systemPrompt},
         ..._history,

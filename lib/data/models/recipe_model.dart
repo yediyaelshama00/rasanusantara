@@ -10,6 +10,7 @@ class Recipe {
   final String difficulty;
   final int estimatedCost;
   final String imagePath;
+  final int baseServings; // <-- BARU: jumlah porsi dasar resep ini
 
   const Recipe({
     this.id,
@@ -23,6 +24,7 @@ class Recipe {
     required this.difficulty,
     required this.estimatedCost,
     required this.imagePath,
+    this.baseServings = 4, // default 4 porsi jika tidak diisi
   });
 
   factory Recipe.fromMap(Map<String, Object?> map) {
@@ -38,6 +40,7 @@ class Recipe {
       difficulty: map['difficulty'] as String,
       estimatedCost: map['estimated_cost'] as int,
       imagePath: map['image_path'] as String,
+      baseServings: (map['base_servings'] as int?) ?? 4,
     );
   }
 
@@ -54,6 +57,7 @@ class Recipe {
       'difficulty': difficulty,
       'estimated_cost': estimatedCost,
       'image_path': imagePath,
+      'base_servings': baseServings,
     };
   }
 }

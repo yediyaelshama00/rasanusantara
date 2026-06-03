@@ -58,6 +58,7 @@ class RecipeRepository {
 
     return rows.map(Recipe.fromMap).toList();
   }
+  
 
   Future<List<Recipe>> getRecipesByIsland(String island) async {
     final db = await _db.database;
@@ -136,7 +137,8 @@ class RecipeRepository {
         r.cook_time_minutes,
         r.difficulty,
         r.estimated_cost,
-        r.image_path
+        r.image_path,
+        r.base_servings
       FROM cooking_schedules s
       INNER JOIN recipes r ON r.id = s.recipe_id
       WHERE s.user_id = ?

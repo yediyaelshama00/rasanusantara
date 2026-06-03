@@ -7,12 +7,59 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
   Database? _database;
 
+  // Naikkan versi DB dari 1 → 2 karena ada kolom baru
+  static const int _dbVersion = 2;
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'rasanusantara.db');
-    _database = await openDatabase(path, version: 1, onCreate: _onCreate);
+    _database = await openDatabase(
+      path,
+      version: _dbVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
     return _database!;
+  }
+
+  // Migrasi: dipanggil saat versi DB lama < versi baru
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Tambah kolom base_servings dengan default 4
+      await db.execute(
+        'ALTER TABLE recipes ADD COLUMN base_servings INTEGER NOT NULL DEFAULT 4',
+      );
+      // Update nilai base_servings per resep sesuai seed
+      final servingsMap = {
+        'Rendang': 4,
+        'Gudeg': 4,
+        'Papeda': 2,
+        'Rawon': 4,
+        'Ayam Betutu': 4,
+        'Pempek': 6,
+        'Coto Makassar': 4,
+        'Soto Banjar': 4,
+        'Seruit': 3,
+        'Mie Aceh': 2,
+        'Choi Pan': 6,
+        'Ketupat Kandangan': 4,
+        'Tinutuan': 4,
+        'Sop Konro': 3,
+        'Plecing Kangkung': 3,
+        'Sei Sapi': 4,
+        'Ikan Bakar Manokwari': 2,
+        'Sagu Lempeng': 4,
+      };
+      for (final entry in servingsMap.entries) {
+        await db.update(
+          'recipes',
+          {'base_servings': entry.value},
+          where: 'name = ?',
+          whereArgs: [entry.key],
+        );
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -41,7 +88,8 @@ class DatabaseHelper {
         cook_time_minutes INTEGER NOT NULL,
         difficulty TEXT NOT NULL,
         estimated_cost INTEGER NOT NULL,
-        image_path TEXT NOT NULL
+        image_path TEXT NOT NULL,
+        base_servings INTEGER NOT NULL DEFAULT 4
       )
     ''');
 
@@ -108,6 +156,7 @@ class DatabaseHelper {
         difficulty: 'Sulit',
         estimatedCost: 145000,
         imagePath: 'assets/images/rendang.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Gudeg',
@@ -120,6 +169,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 85000,
         imagePath: 'assets/images/gudeg.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Papeda',
@@ -132,6 +182,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 65000,
         imagePath: 'assets/images/papeda.png',
+        baseServings: 2,
       ),
       const Recipe(
         name: 'Rawon',
@@ -144,6 +195,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 105000,
         imagePath: 'assets/images/rawon.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Ayam Betutu',
@@ -156,6 +208,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 115000,
         imagePath: 'assets/images/ayam_betutu.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Pempek',
@@ -168,6 +221,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 90000,
         imagePath: 'assets/images/pempek.png',
+        baseServings: 6,
       ),
       const Recipe(
         name: 'Coto Makassar',
@@ -180,6 +234,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 100000,
         imagePath: 'assets/images/coto_makassar.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Soto Banjar',
@@ -192,6 +247,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 75000,
         imagePath: 'assets/images/soto_banjar.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Seruit',
@@ -204,6 +260,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 70000,
         imagePath: 'assets/images/seruit.png',
+        baseServings: 3,
       ),
       const Recipe(
         name: 'Mie Aceh',
@@ -216,6 +273,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 60000,
         imagePath: 'assets/images/mie_aceh.png',
+        baseServings: 2,
       ),
       const Recipe(
         name: 'Choi Pan',
@@ -228,6 +286,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 50000,
         imagePath: 'assets/images/choi_pan.png',
+        baseServings: 6,
       ),
       const Recipe(
         name: 'Ketupat Kandangan',
@@ -240,6 +299,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 85000,
         imagePath: 'assets/images/ketupat_kandangan.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Tinutuan',
@@ -252,6 +312,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 40000,
         imagePath: 'assets/images/tinutuan.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Sop Konro',
@@ -264,6 +325,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 120000,
         imagePath: 'assets/images/sop_konro.png',
+        baseServings: 3,
       ),
       const Recipe(
         name: 'Plecing Kangkung',
@@ -276,6 +338,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 30000,
         imagePath: 'assets/images/plecing_kangkung.png',
+        baseServings: 3,
       ),
       const Recipe(
         name: 'Sei Sapi',
@@ -288,6 +351,7 @@ class DatabaseHelper {
         difficulty: 'Sedang',
         estimatedCost: 100000,
         imagePath: 'assets/images/sei_sapi.png',
+        baseServings: 4,
       ),
       const Recipe(
         name: 'Ikan Bakar Manokwari',
@@ -300,6 +364,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 70000,
         imagePath: 'assets/images/ikan_bakar_manokwari.png',
+        baseServings: 2,
       ),
       const Recipe(
         name: 'Sagu Lempeng',
@@ -312,6 +377,7 @@ class DatabaseHelper {
         difficulty: 'Mudah',
         estimatedCost: 25000,
         imagePath: 'assets/images/sagu_lempeng.png',
+        baseServings: 4,
       ),
     ];
 
