@@ -178,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return PopScope(
           canPop: false, // block hardware back while saving
           child: StatefulBuilder(
-            builder: (context, setSheet) {
+            builder: (innerCtx, setSheet) {
               bool isSheetActive() => sheetCtx.mounted;
 
               final hasPhoto = selectedPhotoPath != null &&
@@ -343,7 +343,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Sukses – catat hasil lalu tutup via navigator yang sudah
                   // di-capture sebelum async gap pertama.
                   didUpdate = true;
-                  Navigator.of(sheetCtx).pop();
+                  if (sheetCtx.mounted) {
+                    Navigator.of(sheetCtx).pop();
+                  }
                 } catch (e) {
                   // Gagal – tampilkan error, sheet tetap terbuka.
                   showErr(_errorMessage(e));
@@ -353,10 +355,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ── UI ────────────────────────────────────────────────────
               return Padding(
                 padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                    bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
                 child: Container(
                   constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.92),
+                      maxHeight: MediaQuery.of(sheetCtx).size.height * 0.92),
                   margin: const EdgeInsets.all(12),
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
                   decoration: BoxDecoration(
@@ -639,9 +641,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-    ).whenComplete(() async {
-      await Future.delayed(const Duration(milliseconds: 100));
-    });
+    );
+
+    // Tunggu animasi sheet selesai sebelum dispose controller
+    // Sheet animasi biasanya ~300ms
+    await Future.delayed(const Duration(milliseconds: 350));
 
     nameController.dispose();
     emailController.dispose();
