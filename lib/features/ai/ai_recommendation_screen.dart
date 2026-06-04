@@ -58,7 +58,16 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
     if (!mounted) return;
 
     // Kata yang di-skip (opsional, ringan saja)
-    const skipKeywords = ['garam', 'gula', 'air', 'minyak', 'kaldu'];
+    const skipKeywords = [
+      'garam',
+      'gula',
+      'air',
+      'minyak',
+      'kaldu',
+      'bumbu rempah',
+      'air panas',
+      'daun pisang'
+    ];
 
     // Hitung frekuensi bahan
     final ingredientCount = <String, int>{};
@@ -67,7 +76,12 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
       final lines = recipe.ingredients.split('\n');
 
       for (final line in lines) {
-        final clean = line.trim().toLowerCase();
+        final parts = line.split('|');
+
+        if (parts.length < 2) continue;
+
+        final clean = parts.last.trim().toLowerCase();
+
         if (clean.isEmpty) continue;
 
         final cleanLower = clean.toLowerCase();
@@ -81,9 +95,7 @@ class _AiRecommendationScreenState extends State<AiRecommendationScreen> {
     }
 
     // Ambil bahan yang sering muncul (>=2 kali)
-    final frequent = ingredientCount.entries
-        .where((e) => e.value >= 2)
-        .toList()
+    final frequent = ingredientCount.entries.where((e) => e.value >= 2).toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     setState(() {

@@ -237,10 +237,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
 
                   // Bahan
                   _GamePanel(
-                    label: 'Bahan-bahan (${r.baseServings} porsi)',
+                    label: 'Bahan-bahan',
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(18, 38, 18, 18),
-                      child: _BulletText(text: r.ingredients),
+                      child: _BulletText(
+                        text: r.ingredients,
+                        baseServings: r.baseServings,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -650,7 +653,8 @@ class _StepperButton extends StatelessWidget {
 
 class _BulletText extends StatelessWidget {
   final String text;
-  const _BulletText({required this.text});
+  final int baseServings;
+  const _BulletText({required this.text, required this.baseServings});
 
   @override
   Widget build(BuildContext context) {
@@ -660,34 +664,77 @@ class _BulletText extends StatelessWidget {
         .where((e) => e.isNotEmpty)
         .toList();
     return Column(
-      children: items
-          .map((line) => Padding(
-                padding: const EdgeInsets.only(bottom: 11),
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                            color: AppColors.cream,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppColors.spiceBrown.withOpacity(0.28))),
-                        child: const Icon(Icons.eco_rounded,
-                            size: 15, color: AppColors.leaf),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(line,
-                              style: const TextStyle(
-                                  color: AppColors.ink,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.42,
-                                  fontSize: 14))),
-                    ]),
-              ))
-          .toList(),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Keterangan takaran porsi default
+        Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.cream,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.spiceBrown.withOpacity(0.22)),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.info_outline_rounded,
+                size: 14, color: AppColors.spiceBrown),
+            const SizedBox(width: 6),
+            Text(
+              'Takaran untuk $baseServings porsi',
+              style: const TextStyle(
+                color: AppColors.spiceBrown,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ]),
+        ),
+        ...items.map((line) {
+          final parts = line.split('|');
+
+          final qty = parts.length > 1 ? parts[0].trim() : '';
+          final ingredient = parts.length > 1 ? parts[1].trim() : line.trim();
+
+          final displayText = qty.isEmpty ? ingredient : '$qty $ingredient';
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 11),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: AppColors.cream,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.spiceBrown.withOpacity(0.28),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.eco_rounded,
+                    size: 15,
+                    color: AppColors.leaf,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    displayText,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w700,
+                      height: 1.42,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }

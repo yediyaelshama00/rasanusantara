@@ -24,7 +24,7 @@ class AiRecipeService {
   2. Menjawab pertanyaan seputar masakan, rempah, dan budaya kuliner Indonesia
   3. Memberikan tips memasak yang praktis
 
-  ${_availableRecipes.isNotEmpty ? 'Daftar resep yang tersedia di aplikasi: $_availableRecipes. Jika merekomendasikan resep, UTAMAKAN resep dari daftar ini.' : ''}
+  ${_availableRecipes.isNotEmpty ? 'Daftar resep yang tersedia di aplikasi: $_availableRecipes. Rekomendasikan HANYA resep yang ada di daftar ini dan sebut namanya persis seperti di daftar.' : ''}
 
   Aturan:
   - Selalu jawab dalam Bahasa Indonesia yang ramah dan natural
